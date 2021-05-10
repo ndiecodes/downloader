@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -20,9 +21,9 @@ type Download struct {
 func main() {
 	startTime := time.Now()
 	d := Download{
-		Url:           "https://www632.ff-02.com/token=XzpWnlP2dW-QPShMJLf56Q/1620630799/129.205.0.0/167/8/f8/acc82f1223337de4e2ec11d3d2722f88-480p.mp4",
-		TargerPath:    "Taoma.mp4",
-		TotalSections: 20,
+		Url:           "https://d.mandela.h.sabishare.com/dl/qGgRVKqeR89/cc8bf714619a570ad086fe1ce2d6e2bf69e9d2f3f12435d79cbab12461b05ced/Taaooma_-_Paul_The_Apprentice_(Part_2)_(NetNaija.com).mp4",
+		TargerPath:    "taoma.mp4",
+		TotalSections: 10,
 	}
 
 	err := d.Do()
@@ -73,14 +74,26 @@ func (d Download) Do() error {
 	}
 
 	fmt.Println(sections)
-
+	var wg sync.WaitGroup
 	for i, s := range sections {
-		err = d.downloadSections(i, s)
-		if err != nil {
-			return err
-		}
+		wg.Add(1)
+		i := i
+		s := s
+		go func() {
+			defer wg.Done()
+			err = d.downloadSections(i, s)
+			if err != nil {
+				panic(err)
+			}
+		}()
 	}
 
+	wg.Wait()
+
+	err = d.mergeFiles(sections)
+	if err != nil {
+		return err
+	}
 	return nil
 
 }
@@ -123,6 +136,34 @@ func (d Download) downloadSections(i int, s [2]int) error {
 
 	if err != nil {
 		return err
+	}
+
+	return nil
+
+}
+
+func (d Download) mergeFiles(sections [][2]int) error {
+	f, err := os.OpenFile(d.TargerPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	for i := range sections {
+		b, err := ioutil.ReadFile(fmt.Sprintf("section-%v.tmp", i))
+
+		if err != nil {
+			return err
+		}
+
+		n, err := f.Write(b)
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%v bytes merged\n", n)
+
 	}
 
 	return nil
