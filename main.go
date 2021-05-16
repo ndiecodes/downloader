@@ -48,7 +48,7 @@ func (d *Download) setPath(path string) {
 }
 
 func (d *Download) Do() error {
-	fmt.Println(("Making connection"))
+	fmt.Println(("Making connection------------"))
 	r, err := d.getNewRequest("HEAD")
 	if err != nil {
 		return err
