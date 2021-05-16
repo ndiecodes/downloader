@@ -17,6 +17,8 @@ import (
 type Download struct {
 	Url           string
 	TargerPath    string
+	tmpDir        string
+	tempFiles     []string
 	TotalSections int
 }
 
@@ -33,10 +35,21 @@ func main() {
 	d := Download{
 		Url:           *url,
 		TargerPath:    "",
+		tmpDir:        "",
+		tempFiles:     make([]string, 10),
 		TotalSections: 10,
 	}
 
-	err := d.Do()
+	dir, err := ioutil.TempDir("", "example")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	d.setTempDir(dir)
+
+	defer os.RemoveAll(dir)
+
+	err = d.Do()
 	if err != nil {
 		log.Fatalf("An error occured while downloading the file: %s \n", err)
 	}
@@ -44,6 +57,10 @@ func main() {
 }
 
 func (d *Download) setPath(path string) {
+	d.TargerPath = path
+}
+
+func (d *Download) setTempDir(path string) {
 	d.TargerPath = path
 }
 
@@ -114,8 +131,6 @@ func (d *Download) Do() error {
 
 func (d *Download) getNewRequest(method string) (*http.Request, error) {
 	r, err := http.NewRequest(method, d.Url, nil)
-
-	// fmt.Println(path.Base(r.URL.Path))
 	d.setPath(path.Base(r.URL.Path))
 	if err != nil {
 		return nil, err
@@ -148,7 +163,14 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(fmt.Sprintf("section-%v.tmp", i), b, os.ModePerm)
+	file, err := ioutil.TempFile(d.tmpDir, "section.*.tmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	d.tempFiles[i] = file.Name()
+
+	err = ioutil.WriteFile(file.Name(), b, os.ModePerm)
 
 	if err != nil {
 		return err
@@ -164,9 +186,8 @@ func (d *Download) mergeFiles(sections [][2]int) error {
 		return err
 	}
 	defer f.Close()
-
 	for i := range sections {
-		b, err := ioutil.ReadFile(fmt.Sprintf("section-%v.tmp", i))
+		b, err := ioutil.ReadFile(d.tempFiles[i])
 
 		if err != nil {
 			return err
@@ -181,7 +202,6 @@ func (d *Download) mergeFiles(sections [][2]int) error {
 		fmt.Printf("%v bytes merged\n", n)
 
 	}
-
 	return nil
 
 }
