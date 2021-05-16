@@ -7,7 +7,12 @@ Internet Download Maneger Written in Go
 - `git clone git@github.com:ndiecodes/downloader.git`
 - `cd downloader`
 - `go build`
-- `./downloader -url "https://example.com/video.mp4"`
+- `./downloader -u "https://example.com/video.mp4"`
+
+### Flags
+
+- `-u` - Url of the file you want to download
+- `-n` - rename downloaded file (optional)
 
 ## Licensing
 

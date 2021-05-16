@@ -24,7 +24,9 @@ type Download struct {
 
 func main() {
 	startTime := time.Now()
-	url := flag.String("url", "", "url to downloadable content")
+	url := flag.String("u", "", "url to downloadable content")
+
+	name := flag.String("n", "", "rename downloaded file")
 
 	flag.Parse()
 	if *url == "" {
@@ -34,13 +36,13 @@ func main() {
 
 	d := Download{
 		Url:           *url,
-		TargerPath:    "",
+		TargerPath:    *name,
 		tmpDir:        "",
 		tempFiles:     make([]string, 10),
 		TotalSections: 10,
 	}
 
-	dir, err := ioutil.TempDir("", "example")
+	dir, err := ioutil.TempDir("", "downloader")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,7 +63,7 @@ func (d *Download) setPath(path string) {
 }
 
 func (d *Download) setTempDir(path string) {
-	d.TargerPath = path
+	d.tmpDir = path
 }
 
 func (d *Download) Do() error {
@@ -128,7 +130,10 @@ func (d *Download) Do() error {
 
 func (d *Download) getNewRequest(method string) (*http.Request, error) {
 	r, err := http.NewRequest(method, d.Url, nil)
-	d.setPath(path.Base(r.URL.Path))
+	if d.TargerPath == "" {
+		d.setPath(path.Base(r.URL.Path))
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +178,6 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 
 }
 
-
 func (d *Download) mergeFiles(sections [][2]int) error {
 
 	fmt.Println("Merging Temp Files--------------")
@@ -194,8 +198,6 @@ func (d *Download) mergeFiles(sections [][2]int) error {
 		if err != nil {
 			return err
 		}
-
-		// fmt.Printf("%v bytes merged\n", n)
 
 	}
 	return nil
