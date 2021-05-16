@@ -22,7 +22,7 @@ type Download struct {
 	TotalSections int
 }
 
-func main() {
+func main() {		// fmt.Printf("%v bytes merged\n", n)
 	startTime := time.Now()
 	url := flag.String("url", "", "url to downloadable content")
 
@@ -74,7 +74,7 @@ func (d *Download) Do() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Got %v\n", resp.StatusCode)
+	fmt.Printf("Status: %v\n", resp.StatusCode)
 
 	if resp.StatusCode > 299 {
 		return errors.New(fmt.Sprintf("Can't process, response is %v", resp.StatusCode))
@@ -85,7 +85,7 @@ func (d *Download) Do() error {
 		return err
 	}
 
-	fmt.Printf("size is %v bytes\n", size)
+	fmt.Printf("Total size: %v bytes\n", size)
 
 	eachSize := size / d.TotalSections
 
@@ -98,13 +98,11 @@ func (d *Download) Do() error {
 			sections[i][0] = sections[i-1][1] + 1
 		}
 		if i < d.TotalSections-1 {
-			sections[i][1] = sections[i][0] + eachSize
+			sections		// fmt.Printf("%v bytes merged\n", n)[i][1] = sections[i][0] + eachSize
 		} else {
 			sections[i][1] = size - 1
 		}
 	}
-
-	fmt.Println(sections)
 	var wg sync.WaitGroup
 	for i, s := range sections {
 		wg.Add(1)
@@ -118,13 +116,13 @@ func (d *Download) Do() error {
 			}
 		}()
 	}
-
 	wg.Wait()
 
 	err = d.mergeFiles(sections)
 	if err != nil {
 		return err
-	}
+	}Merging Files--------------
+	Download completed in
 	return nil
 
 }
@@ -145,16 +143,12 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 		return err
 	}
 
-	fmt.Printf("bytes=%v-%v\n", s[0], s[1])
-
 	r.Header.Set("Range", fmt.Sprintf("bytes=%v-%v", s[0], s[1]))
 
 	resp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(resp.Header.Get("Content-Length"))
 
 	fmt.Printf("Downloaded %v bytes for section %v: %v\n", resp.Header.Get("Content-Length"), i, s)
 
@@ -181,6 +175,7 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 }
 
 func (d *Download) mergeFiles(sections [][2]int) error {
+	fmt.Println("Merging Files--------------")
 	f, err := os.OpenFile(d.TargerPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return err
@@ -193,14 +188,11 @@ func (d *Download) mergeFiles(sections [][2]int) error {
 			return err
 		}
 
-		n, err := f.Write(b)
+		_, err = f.Write(b)
 
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("%v bytes merged\n", n)
-
 	}
 	return nil
 
