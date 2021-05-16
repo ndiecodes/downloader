@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -20,8 +21,15 @@ type Download struct {
 
 func main() {
 	startTime := time.Now()
+	url := flag.String("url", "", "url to downloadable content")
+
+	flag.Parse()
+	if *url == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
 	d := Download{
-		Url:           "https://d.mandela.h.sabishare.com/dl/qGgRVKqeR89/cc8bf714619a570ad086fe1ce2d6e2bf69e9d2f3f12435d79cbab12461b05ced/Taaooma_-_Paul_The_Apprentice_(Part_2)_(NetNaija.com).mp4",
+		Url:           *url,
 		TargerPath:    "taoma.mp4",
 		TotalSections: 10,
 	}
