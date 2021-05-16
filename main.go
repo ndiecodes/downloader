@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -28,9 +29,10 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+
 	d := Download{
 		Url:           *url,
-		TargerPath:    "taoma.mp4",
+		TargerPath:    "",
 		TotalSections: 10,
 	}
 
@@ -41,7 +43,11 @@ func main() {
 	fmt.Printf("Download completed in %v seconds\n", time.Now().Sub(startTime).Seconds())
 }
 
-func (d Download) Do() error {
+func (d *Download) setPath(path string) {
+	d.TargerPath = path
+}
+
+func (d *Download) Do() error {
 	fmt.Println(("Making connection"))
 	r, err := d.getNewRequest("HEAD")
 	if err != nil {
@@ -106,9 +112,11 @@ func (d Download) Do() error {
 
 }
 
-func (d Download) getNewRequest(method string) (*http.Request, error) {
+func (d *Download) getNewRequest(method string) (*http.Request, error) {
 	r, err := http.NewRequest(method, d.Url, nil)
 
+	// fmt.Println(path.Base(r.URL.Path))
+	d.setPath(path.Base(r.URL.Path))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +124,7 @@ func (d Download) getNewRequest(method string) (*http.Request, error) {
 	return r, nil
 }
 
-func (d Download) downloadSections(i int, s [2]int) error {
+func (d *Download) downloadSections(i int, s [2]int) error {
 	r, err := d.getNewRequest("GET")
 	if err != nil {
 		return err
@@ -150,7 +158,7 @@ func (d Download) downloadSections(i int, s [2]int) error {
 
 }
 
-func (d Download) mergeFiles(sections [][2]int) error {
+func (d *Download) mergeFiles(sections [][2]int) error {
 	f, err := os.OpenFile(d.TargerPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return err
