@@ -78,7 +78,7 @@ func (d *Download) Do() error {
 		return err
 	}
 
-	if resp.Header.Get("Accept-Ranges") == "bytes" {
+	if resp.Header.Get("Accept-Ranges") != "bytes" {
 		d.downloadLoneFile()
 		return nil
 	}
