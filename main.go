@@ -22,7 +22,7 @@ type Download struct {
 	TotalSections int
 }
 
-func main() {		// fmt.Printf("%v bytes merged\n", n)
+func main() {
 	startTime := time.Now()
 	url := flag.String("url", "", "url to downloadable content")
 
@@ -98,7 +98,7 @@ func (d *Download) Do() error {
 			sections[i][0] = sections[i-1][1] + 1
 		}
 		if i < d.TotalSections-1 {
-			sections		// fmt.Printf("%v bytes merged\n", n)[i][1] = sections[i][0] + eachSize
+			sections[i][1] = sections[i][0] + eachSize
 		} else {
 			sections[i][1] = size - 1
 		}
@@ -121,8 +121,7 @@ func (d *Download) Do() error {
 	err = d.mergeFiles(sections)
 	if err != nil {
 		return err
-	}Merging Files--------------
-	Download completed in
+	}
 	return nil
 
 }
@@ -174,8 +173,10 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 
 }
 
+
 func (d *Download) mergeFiles(sections [][2]int) error {
-	fmt.Println("Merging Files--------------")
+
+	fmt.Println("Merging Temp Files--------------")
 	f, err := os.OpenFile(d.TargerPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return err
@@ -193,6 +194,9 @@ func (d *Download) mergeFiles(sections [][2]int) error {
 		if err != nil {
 			return err
 		}
+
+		// fmt.Printf("%v bytes merged\n", n)
+
 	}
 	return nil
 
