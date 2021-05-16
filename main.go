@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -76,6 +77,12 @@ func (d *Download) Do() error {
 	if err != nil {
 		return err
 	}
+
+	if resp.Header.Get("Accept-Ranges") == "bytes" {
+		d.downloadLoneFile()
+		return nil
+	}
+
 	fmt.Printf("Status: %v\n", resp.StatusCode)
 
 	if resp.StatusCode > 299 {
@@ -126,6 +133,37 @@ func (d *Download) Do() error {
 	}
 	return nil
 
+}
+
+func (d *Download) downloadLoneFile() error {
+
+	fmt.Println("Downloading Lone File.......")
+
+	r, err := d.getNewRequest("GET")
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(d.TargerPath)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(f, resp.Body)
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	return nil
 }
 
 func (d *Download) getNewRequest(method string) (*http.Request, error) {
@@ -181,7 +219,7 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 func (d *Download) mergeFiles(sections [][2]int) error {
 
 	fmt.Println("Merging Temp Files--------------")
-	f, err := os.OpenFile(d.TargerPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	f, err := os.Create(d.TargerPath)
 	if err != nil {
 		return err
 	}
