@@ -9,8 +9,9 @@ Internet Download Manager Written in Go
 
 ### Flags
 
-- `-u` - Url of the file you want to download
-- `-n` - rename downloaded file (optional)
+- `-u` - Url of the file you want to download (required)
+- `-n` - Rename downloaded file (optional)
+- `-d` - Files are saved to `Downloads`, but you can change to a different public directory with this flag. (Optional)
 
 ## Licensing
 

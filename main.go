@@ -17,12 +17,12 @@ import (
 )
 
 type Download struct {
-	Url                string
-	defaultDownloadDir string
-	TargerPath         string
-	tmpDir             string
-	tempFiles          []string
-	TotalSections      int
+	Url           string
+	downloadDir   string
+	TargerPath    string
+	tmpDir        string
+	tempFiles     []string
+	TotalSections int
 }
 
 func main() {
@@ -31,6 +31,8 @@ func main() {
 
 	name := flag.String("n", "", "rename downloaded file")
 
+	downloadDir := flag.String("d", "Downloads", "save file to another directory. eg Videos or Documents")
+
 	flag.Parse()
 	if *url == "" {
 		flag.Usage()
@@ -38,12 +40,12 @@ func main() {
 	}
 
 	d := Download{
-		Url:                *url,
-		defaultDownloadDir: "Downloads",
-		TargerPath:         *name,
-		tmpDir:             "",
-		tempFiles:          make([]string, 10),
-		TotalSections:      10,
+		Url:           *url,
+		downloadDir:   *downloadDir,
+		TargerPath:    *name,
+		tmpDir:        "",
+		tempFiles:     make([]string, 10),
+		TotalSections: 10,
 	}
 
 	dir, err := ioutil.TempDir("", "downloader")
@@ -232,7 +234,7 @@ func (d *Download) getDownloadPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	downloads := fmt.Sprintf("%s/%s/", currentUser.HomeDir, d.defaultDownloadDir)
+	downloads := fmt.Sprintf("%s/%s/", currentUser.HomeDir, d.downloadDir)
 	return downloads, nil
 }
 
