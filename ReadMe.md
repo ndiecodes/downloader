@@ -1,13 +1,11 @@
 # Downloader
 
-Internet Download Maneger Written in Go
+Internet Download Manager Written in Go
 
 ## Usage
 
-- `git clone git@github.com:ndiecodes/downloader.git`
-- `cd downloader`
-- `go build`
-- `./downloader -u "https://example.com/video.mp4"`
+- `go get github.com/ndiecodes/downloader`
+- `downloader -u "https://example.com/video.mp4"`
 
 ### Flags
 
