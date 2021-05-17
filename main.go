@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/user"
 	"path"
 	"strconv"
 	"sync"
@@ -16,11 +17,12 @@ import (
 )
 
 type Download struct {
-	Url           string
-	TargerPath    string
-	tmpDir        string
-	tempFiles     []string
-	TotalSections int
+	Url                string
+	defaultDownloadDir string
+	TargerPath         string
+	tmpDir             string
+	tempFiles          []string
+	TotalSections      int
 }
 
 func main() {
@@ -36,11 +38,12 @@ func main() {
 	}
 
 	d := Download{
-		Url:           *url,
-		TargerPath:    *name,
-		tmpDir:        "",
-		tempFiles:     make([]string, 10),
-		TotalSections: 10,
+		Url:                *url,
+		defaultDownloadDir: "Downloads",
+		TargerPath:         *name,
+		tmpDir:             "",
+		tempFiles:          make([]string, 10),
+		TotalSections:      10,
 	}
 
 	dir, err := ioutil.TempDir("", "downloader")
@@ -54,13 +57,21 @@ func main() {
 
 	err = d.Do()
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err != nil {
 		log.Fatalf("An error occured while downloading the file: %s \n", err)
 	}
 	fmt.Printf("Download completed in %v seconds\n", time.Now().Sub(startTime).Seconds())
 }
 
 func (d *Download) setPath(path string) {
-	d.TargerPath = path
+	downloadsDir, err := d.getDownloadPath()
+	if err != nil {
+		log.Fatal(err)
+	}
+	d.TargerPath = downloadsDir + path
 }
 
 func (d *Download) setTempDir(path string) {
@@ -214,6 +225,15 @@ func (d *Download) downloadSections(i int, s [2]int) error {
 
 	return nil
 
+}
+
+func (d *Download) getDownloadPath() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	downloads := fmt.Sprintf("%s/%s/", currentUser.HomeDir, d.defaultDownloadDir)
+	return downloads, nil
 }
 
 func (d *Download) mergeFiles(sections [][2]int) error {
